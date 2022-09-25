@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     tags:
-      - "*"
+      - "v*"
   workflow_dispatch:
 
 jobs:
@@ -95,7 +95,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./suzumebachi_linux.tar.gz
+          asset_path: ./Suzumebachi_linux.tar.gz
           asset_name: Suzumebachi_linux_${{ env.RELEASE_VERSION }}.tar.gz
           asset_content_type: application/gzip
 
