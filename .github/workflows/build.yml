@@ -65,17 +65,17 @@ jobs:
 
     steps:
       - name: Download Linux
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: Suzumebachi_linux
 
       - name: Download Mac
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: Suzumebachi_macos
 
       - name: Download Windows
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: Suzumebachi_windows
 
