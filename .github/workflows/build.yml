@@ -33,7 +33,7 @@ jobs:
 
       - run: make
 
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v3
         with:
           name: Suzumebachi_${{ runner.os }}
           path: ./main
