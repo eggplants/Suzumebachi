@@ -1,0 +1,110 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          # - windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install libglu1-mesa-dev mesa-common-dev freeglut3-dev -y
+
+      - if: matrix.os == 'macos-latest'
+        run: brew install freeglut mesa-glu
+
+      # - if: matrix.os == 'windows-latest'
+      #  run:
+
+      - run: make
+
+      - uses: actions/upload-artifact@v1
+        with:
+          name: Suzumebachi_${{ runner.os }}
+          path: ./main
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Linux
+        uses: actions/download-artifact@v1
+        with:
+          name: Suzumebachi_linux
+
+      - name: Download Mac
+        uses: actions/download-artifact@v1
+        with:
+          name: Suzumebachi_macos
+
+      # - name: Download Windows
+      #   uses: actions/download-artifact@v1
+      #   with:
+      #     name: Suzumebachi_windows
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Set env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> "$GITHUB_ENV"
+
+      - name: Zip
+        run: |
+          ls -la
+          tar czvf Suzumebachi_macos.tar.gz Suzumebachi_macos
+          tar czvf Suzumebachi_linux.tar.gz Suzumebachi_linux
+          # zip -r Suzumebachi_windows.zip Suzumebachi_windows
+
+      - name: Append mac Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./Suzumebachi_macos.tar.gz
+          asset_name: Suzumebachi_macos_${{ env.RELEASE_VERSION }}.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Append linux Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./suzumebachi_linux.tar.gz
+          asset_name: Suzumebachi_linux_${{ env.RELEASE_VERSION }}.tar.gz
+          asset_content_type: application/gzip
+
+      # - name: Append win Binary
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./Suzumebachi_windows.zip
+      #     asset_name: Suzumebachi_windows_${{ env.RELEASE_VERSION }}.zip
+      #     asset_content_type: application/zip
