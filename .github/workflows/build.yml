@@ -15,7 +15,7 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
-          # - windows-latest
+          - windows-latest
 
     steps:
       - uses: actions/checkout@v3
@@ -28,8 +28,29 @@ jobs:
       - if: matrix.os == 'macos-latest'
         run: brew install freeglut mesa-glu
 
-      # - if: matrix.os == 'windows-latest'
-      #  run:
+      - if: matrix.os == 'windows-latest'
+        run: |
+          ls -r -n -File
+
+          # https://www.cs.uregina.ca/Links/class-info/315/WWW/Lab1/GLUT/windows.html
+          $pwd = Get-Location
+          wget "https://www.transmissionzero.co.uk/files/software/development/GLUT/freeglut-MSVC-3.0.0-2.mp.zip"
+          Expand-Archive -LiteralPath freeglut-MSVC-3.0.0-2.mp.zip -DestinationPath $pwd
+
+          # Header files
+          mv freeglut\include.GL\* "C:\Program Files (x86)\Microsoft Visual Studio 17.0\VC\include\gl"
+
+          # 32-bit lib files
+          # mv freeglut\lib\freeglut.lib "C:\Program Files (x86)\Microsoft Visual Studio 17.0\VC\lib"
+
+          # 32-bit dll files
+          # mv freeglut\bin\freeglut.dll C:\WINDOWS\SysWOW64
+
+          # 64-bit lib files
+          mv freeglut\lib\x64\freeglut.lib "C:\Program Files (x86)\Microsoft Visual Studio 17.0\VC\lib\amd64"
+
+          # 64-bit dll files
+          mv freeglut\bin\freeglut.dll C:\WINDOWS\System32
 
       - run: make
 
@@ -53,10 +74,10 @@ jobs:
         with:
           name: Suzumebachi_macos
 
-      # - name: Download Windows
-      #   uses: actions/download-artifact@v1
-      #   with:
-      #     name: Suzumebachi_windows
+      - name: Download Windows
+        uses: actions/download-artifact@v1
+        with:
+          name: Suzumebachi_windows
 
       - name: Create Release
         id: create_release
@@ -77,7 +98,7 @@ jobs:
           ls -la
           tar czvf Suzumebachi_macos.tar.gz Suzumebachi_macos
           tar czvf Suzumebachi_linux.tar.gz Suzumebachi_linux
-          # zip -r Suzumebachi_windows.zip Suzumebachi_windows
+          zip -r Suzumebachi_windows.zip Suzumebachi_windows
 
       - name: Append mac Binary
         uses: actions/upload-release-asset@v1
@@ -99,12 +120,12 @@ jobs:
           asset_name: Suzumebachi_linux_${{ env.RELEASE_VERSION }}.tar.gz
           asset_content_type: application/gzip
 
-      # - name: Append win Binary
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: ./Suzumebachi_windows.zip
-      #     asset_name: Suzumebachi_windows_${{ env.RELEASE_VERSION }}.zip
-      #     asset_content_type: application/zip
+      - name: Append win Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./Suzumebachi_windows.zip
+          asset_name: Suzumebachi_windows_${{ env.RELEASE_VERSION }}.zip
+          asset_content_type: application/zip
